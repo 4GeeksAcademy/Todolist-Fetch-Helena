@@ -1,26 +1,80 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 
-//include images into your bundle
-import rigoImage from "../../img/rigo-baby.jpg";
-
-//create your first component
 const Home = () => {
-	return (
-		<div className="text-center">
-			<h1 className="text-center mt-5">Hello Rigo!</h1>
-			<p>
-				<img src={rigoImage} />
-			</p>
-			<a href="#" className="btn btn-success">
-				If you see this green button... bootstrap is working...
-			</a>
-			<p>
-				Made by{" "}
-				<a href="http://www.4geeksacademy.com">4Geeks Academy</a>, with
-				love!
-			</p>
-		</div>
-	);
-};
+ const [task, setTask] = useState('');
+ const [tasks, setTasks] = useState([]);
+ const DOMAIN = "https://playground.4geeks.com/apis/fake/todos/user/helenaraimundo91";
+
+ const handleFetchTasks = async () => {
+  try {
+    const textResponse = await fetch(DOMAIN);
+    const jsonResponse = await textResponse.json();
+    setTasks(jsonResponse);
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+  }
+ }
+
+
+
+ useEffect(() => {
+ handleFetchTasks(); 
+}, []);
+
+ async function updateTask(updatedList) {
+ 
+    await fetch(DOMAIN, {
+     method: 'PUT',
+     headers: {
+       "Content-Type": "application/json"
+     },
+     body: JSON.stringify(updatedList), 
+   });
+     handleFetchTasks(); 
+ }
+    
+
+ const addTask = () => {
+  const newTask = { label: task, done: false };
+  const updatedList = [...tasks, newTask ]; 
+  setTasks(updatedList);
+  setTask('');
+  updateTask(updatedList)
+ }
+
+ const handleKeyDown = (event) => {
+ if(event.key === 'Enter'){
+   addTask();
+ }
+ }
+
+ const handleDelete = (index) => {
+  const updatedList = tasks.filter((task, currenTask) => index !== currenTask);
+  setTasks(updatedList);
+  updateTask(updatedList);
+  
+ }
+ 
+
+ return (
+ <div>
+	 <div className='todo-list'>
+		 <h3>Insert your tasks </h3>
+     <input 
+       className='taskInput'
+       type="text" 
+       onChange={e => setTask(e.target.value)} 
+       value={task} 
+       onKeyDown={handleKeyDown}
+     />
+     <button onClick={addTask}>Add Task</button>
+     <ul>
+      {tasks.map((task, index) => <li key={index}>{task.label}<i class="fa-solid fa-trash" onClick={() => handleDelete(index)} ></i></li>)}
+     </ul>
+   </div>
+    <div className='tasksRemaining'>{tasks.length} Tasks Remaining</div>
+ </div>
+ );
+}
 
 export default Home;
